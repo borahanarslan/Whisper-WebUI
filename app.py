@@ -3,11 +3,12 @@ import argparse
 import gradio as gr
 from gradio_i18n import Translate, gettext as _
 import yaml
-
+import sys
 from modules.utils.paths import (FASTER_WHISPER_MODELS_DIR, DIARIZATION_MODELS_DIR, OUTPUT_DIR, WHISPER_MODELS_DIR,
                                  INSANELY_FAST_WHISPER_MODELS_DIR, NLLB_MODELS_DIR, DEFAULT_PARAMETERS_CONFIG_PATH,
                                  UVR_MODELS_DIR, I18N_YAML_PATH)
 from modules.utils.files_manager import load_yaml
+from modules.utils.language import LANGUAGE_CODES
 from modules.whisper.whisper_factory import WhisperFactory
 from modules.translation.nllb_inference import NLLBInference
 from modules.ui.htmls import *
@@ -46,13 +47,15 @@ class App:
         vad_params = self.default_params["vad"]
         diarization_params = self.default_params["diarization"]
         uvr_params = self.default_params["bgm_separation"]
-
+        choices = sorted([(language, code) for language, code in LANGUAGE_CODES.items()])
         with gr.Row():
             dd_model = gr.Dropdown(choices=self.whisper_inf.available_models, value=whisper_params["model_size"],
                                    label=_("Model"))
-            dd_lang = gr.Dropdown(choices=self.whisper_inf.available_langs + [AUTOMATIC_DETECTION],
-                                  value=AUTOMATIC_DETECTION if whisper_params["lang"] == AUTOMATIC_DETECTION.unwrap()
-                                  else whisper_params["lang"], label=_("Language"))
+            """dd_lang = gr.Dropdown(choices=[lang.title() for lang in self.whisper_inf.available_langs] + [AUTOMATIC_DETECTION.title()],
+                                  value=AUTOMATIC_DETECTION if whisper_params.get("lang") == AUTOMATIC_DETECTION else whisper_params.get("lang", AUTOMATIC_DETECTION),
+                                  label=_("Language"))"""
+            dd_lang = gr.Dropdown(choices=choices + [("Automatic Detection", "auto")],value="auto",label=_("Language")
+)
             dd_file_format = gr.Dropdown(choices=["SRT", "WebVTT", "txt", "LRC"], value="SRT", label=_("File Format"))
         with gr.Row():
             cb_translate = gr.Checkbox(value=whisper_params["is_translate"], label=_("Translate to English?"),
